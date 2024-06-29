@@ -1,6 +1,6 @@
 import express from "express"
 import { Request, Response } from "express"
-//conexión a la base de datos local
+import { prisma } from "./config/db"
 import { config } from "dotenv"
 import morgan from "morgan"
 import cors from "cors"
@@ -31,7 +31,10 @@ server.use(cors());
 server.listen(process.env.PORT, async () => {
     console.log("Escuchando en el puerto", process.env.PORT);
     try {
+        await prisma.$connect();
+        console.log("Conexión a la base de datos establecida con éxito");
     } catch (error) {
-        console.log("Error al ejecutar el código asincrónico:", error);
+        console.log("Error al levantar servidor:", error);
     }
 });
+
