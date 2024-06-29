@@ -1,0 +1,37 @@
+import express from "express"
+import { Request, Response } from "express"
+//conexión a la base de datos local
+import { config } from "dotenv"
+import morgan from "morgan"
+import cors from "cors"
+config({ path: `./.env.${process.env.NEDE_ENV}`})
+//llamado de las los end points, index
+
+const server = express()
+
+morgan.token("date", (req:Request, res:Response) => {
+    const date = new Date();
+    const localDate = date.setTime(
+        date.getTime() - date.getTimezoneOffset() * 60000
+    )
+    return new Date(localDate).toISOString();
+})
+
+const customMorgan = ':remote-addr - :remote-user [:date] ":method :url HTTP/:http-version" :status :res[content-length]';
+
+server.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : customMorgan))
+
+server.use(express.json());
+server.use(cors());
+
+// server.use('/api', routes); //cuando tenga los endpoints
+
+
+//cuando tenga la conexión a la DB, sincronizar
+server.listen(process.env.PORT, async () => {
+    console.log("Escuchando en el puerto", process.env.PORT);
+    try {
+    } catch (error) {
+        console.log("Error al ejecutar el código asincrónico:", error);
+    }
+});
