@@ -13,13 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Users {
   id    Int    
   userName String  @unique
   password  String
 }
 
-model Alertas {
+model Alerts {
   id    Int    
   signalName String  @unique
   idSignal  String   @unique
