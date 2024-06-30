@@ -17,7 +17,7 @@ class AlertsControllers {
     }
 
     static async createAlerts(req:Request, res:Response){
-        
+
         const { status, error, data } = await AlertsService.addAlert()
 
         if(error){

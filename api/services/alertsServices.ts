@@ -12,18 +12,17 @@ class AlertsService {
 
         return { status: 200, error: false, data: alerts }
     }
+    
+    static async addAlert(){
+        const alertData = [
+            { idSignal: 1108, signalName: 'AMRadioLaRed', text: "Gol de Lautaro Martinez", date: "2024-06-29", hour: "22:52:49" },
+            { idSignal: 1103, signalName: 'AMRadioNacional', text: "Aguante fideo Di Maria", date: "2024-06-29", hour: "23:06:49" },
+          ];
+        
 
-    static async addAlert (){
-
-        //Este endpoit, luegp de crear enviaría la alerta atraves del socket
-        const alertCreated = await prisma.alerts.createMany(
-            {
-                data: [
-                    { idSignal: 1108, signalName: 'AMRadioLaRed', text: "Gol de Lautaro Martinez", date: "2024-06-29", hour: "22:52:49" },
-                    { idSignal: 1103, signalName: 'AMRadioNacional', text: "Aguante fideo Di Maria", date: "2024-06-29", hour: "23:06:49" },
-                  ],
-              }
-        )
+        const alertCreated = await prisma.$transaction(
+            alertData.map((alert) => prisma.alerts.create({ data: alert }))
+          );
 
         if(!alertCreated){
             return {
