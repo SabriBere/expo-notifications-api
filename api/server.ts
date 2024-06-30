@@ -34,9 +34,22 @@ const socket = new WebSocketServer({ server })
 
 const clients: Set<WebSocket> = new Set()
 
-socket.on('connection', (ws) => {
+socket.on('connection', async (ws) => {
     console.log('Cliente conectado')
     clients.add(ws)
+
+    try {
+        // Consulta al endpoint para obtener el histórico de alertas
+        const res = await axios.get(`${process.env.API_URL}/alerts/`);
+        const alertData = res.data.data;
+
+        // Enviar el histórico de alertas al cliente recién conectado
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(alertData));
+        }
+    } catch (error) {
+        console.error('Error al obtener el histórico de alertas:', error);
+    }
 
     ws.on('message', (message) => {
         console.log('Recibiendo mensajes del cliente', message)

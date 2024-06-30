@@ -1,8 +1,30 @@
 import { prisma } from "../config/db"
 
 class AlertsService {
-    static async searchAllAlerts(){
+    static async searchAllAlerts(page:number){
+        const pageSize:number = 20
+        const skip:number = page  * pageSize
+
+        if(page){
+            console.log('entra a la condición?')
+            const totalResults = await prisma.alerts.count()
+            const alerts = await prisma.alerts.findMany(
+                {
+                    skip:skip,
+                    take:pageSize
+                    //Aqui podría ir un order by
+                }
+            )
+
+            return { status: 200, error: false, data: {
+                alerts,
+                totalPages: Math.floor(totalResults / pageSize),
+                count: totalResults,
+            } }
+        }
+
         const alerts = await prisma.alerts.findMany()
+       
 
         if(!alerts){
             return {
@@ -12,7 +34,7 @@ class AlertsService {
 
         return { status: 200, error: false, data: alerts }
     }
-    
+
     static async addAlert(){
         const alertData = [
             { idSignal: 1108, signalName: 'AMRadioLaRed', text: "Gol de Lautaro Martinez", date: "2024-06-29", hour: "22:52:49" },

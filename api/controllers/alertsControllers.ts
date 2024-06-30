@@ -3,8 +3,8 @@ import AlertsService from "../services/alertsServices"
 
 class AlertsControllers {
     static async allAlerts(req: Request, res:Response){
-
-        const { status, error, data } = await AlertsService.searchAllAlerts()
+        const page:any = req.query.page 
+        const { status, error, data } = await AlertsService.searchAllAlerts(page)
 
         if(error){
             if(status === 400){
