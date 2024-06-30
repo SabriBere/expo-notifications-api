@@ -1,5 +1,4 @@
 import { prisma } from "../config/db"
-import { alertsMocks } from "../mockups/alertsMock"
 
 class AlertsService {
     static async searchAllAlerts(){
