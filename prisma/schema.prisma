@@ -13,18 +13,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model Users {
-  id    Int    
-  userName String  @unique
-  password  String
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  userName    String
+  password    String
 }
 
 model Alerts {
-  id    Int    
-  signalName String  @unique
-  idSignal  String   @unique
-  text String
-  hour String
-  date String
+  id          Int    @id @default(autoincrement())
+  idSignal    Int    @unique
+  signalName  String
+  text        String
+  date        String
+  hour        String
 }
-

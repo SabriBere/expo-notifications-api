@@ -2,10 +2,11 @@ import express from "express"
 import { Request, Response } from "express"
 import { prisma } from "./config/db"
 import { config } from "dotenv"
+//llamado de las los end points, index
+import routes from './rotes/index'
 import morgan from "morgan"
 import cors from "cors"
 config({ path: `./.env.${process.env.NEDE_ENV}`})
-//llamado de las los end points, index
 
 const server = express()
 
@@ -24,7 +25,7 @@ server.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : customMorgan)
 server.use(express.json());
 server.use(cors());
 
-// server.use('/api', routes); //cuando tenga los endpoints
+server.use('/api', routes); //cuando tenga los endpoints
 
 
 //cuando tenga la conexión a la DB, sincronizar
