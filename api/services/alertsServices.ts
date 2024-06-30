@@ -11,8 +11,10 @@ class AlertsService {
             const alerts = await prisma.alerts.findMany(
                 {
                     skip:skip,
-                    take:pageSize
-                    //Aqui podría ir un order by
+                    take:pageSize,
+                    orderBy: {
+                        id: 'desc'
+                    }
                 }
             )
 
@@ -23,7 +25,11 @@ class AlertsService {
             } }
         }
 
-        const alerts = await prisma.alerts.findMany()
+        const alerts = await prisma.alerts.findMany({
+            orderBy: {
+                id: 'desc'
+            }
+        });
        
 
         if(!alerts){
