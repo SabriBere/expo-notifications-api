@@ -19,7 +19,7 @@ class AlertsService {
             )
 
             return { status: 200, error: false, data: {
-                alerts,
+                alerts: alerts,
                 totalPages: Math.floor(totalResults / pageSize),
                 count: totalResults,
             } }
@@ -38,7 +38,7 @@ class AlertsService {
             }
         }
 
-        return { status: 200, error: false, data: alerts }
+        return { status: 200, error: false, data: { alerts: alerts } }
     }
 
     static async addAlert(){
