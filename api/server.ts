@@ -1,41 +1,48 @@
 import express from "express"
-import { Request, Response } from "express"
-import { prisma } from "./config/db"
+// import { Request, Response } from "express"
+// import { prisma } from "./config/db"
 import { config } from "dotenv"
-import morgan from "morgan"
+import { WebSocketServer, WebSocket } from "ws";
 import cors from "cors"
-config({ path: `./.env.${process.env.NEDE_ENV}`})
+import http from "http";
+config({ path: `./.env.${process.env.NODE_ENV}`})
 //llamado de las los end points, index
 
 const server = express()
 
-morgan.token("date", (req:Request, res:Response) => {
-    const date = new Date();
-    const localDate = date.setTime(
-        date.getTime() - date.getTimezoneOffset() * 60000
-    )
-    return new Date(localDate).toISOString();
-})
-
-const customMorgan = ':remote-addr - :remote-user [:date] ":method :url HTTP/:http-version" :status :res[content-length]';
-
-server.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : customMorgan))
-
 server.use(express.json());
 server.use(cors());
 
-// server.use('/api', routes); //cuando tenga los endpoints
+server.get("/health", (_req, res) => {
+  res.json({ ok: true, message: "Server running" });
+});
 
+const httpServer = http.createServer(server);
 
-//cuando tenga la conexión a la DB, sincronizar
-server.listen(process.env.PORT, async () => {
-    console.log("Escuchando en el puerto", process.env.PORT);
-    try {
-        // await prisma.$connect();
-        // console.log("Conexión a la base de datos establecida con éxito");
-        console.log("Conexión a la base de datos establecida con éxito");
-    } catch (error) {
-        console.log("Error al levantar servidor:", error);
-    }
+const wss = new WebSocketServer({ server: httpServer });
+
+wss.on("connection", (socket: WebSocket) => {
+  console.log("Client connected to socket");
+
+  socket.send(
+    JSON.stringify({
+      type: "CONNECTED",
+      message: "Conection success",
+    })
+  );
+
+  socket.on("close", () => {
+    console.log("Client desconected");
+  });
+
+  socket.on("message", (message) => {
+    console.log("Message form client", message.toString());
+  });
+});
+
+const PORT = Number(process.env.SOCKET_PORT);
+//socket
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`Escuchando socket en 0.0.0.0:${PORT}`);
 });
 
