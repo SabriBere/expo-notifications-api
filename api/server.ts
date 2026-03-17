@@ -31,7 +31,8 @@ server.use(cors());
 server.listen(process.env.PORT, async () => {
     console.log("Escuchando en el puerto", process.env.PORT);
     try {
-        await prisma.$connect();
+        // await prisma.$connect();
+        // console.log("Conexión a la base de datos establecida con éxito");
         console.log("Conexión a la base de datos establecida con éxito");
     } catch (error) {
         console.log("Error al levantar servidor:", error);
