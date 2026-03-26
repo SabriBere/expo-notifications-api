@@ -1,0 +1,5 @@
+#archivo a ignorar
+build
+coverage
+node_modules
+prisma
