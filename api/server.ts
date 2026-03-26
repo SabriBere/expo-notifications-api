@@ -1,40 +1,28 @@
 import express from "express"
-import { Request, Response } from "express"
-import { prisma } from "./config/db"
-import { config } from "dotenv"
-import morgan from "morgan"
+import { WebSocketServer, WebSocket } from "ws";
+import { handlerNewsSocketConnection } from "./sockets/newsSocket";
 import cors from "cors"
-config({ path: `./.env.${process.env.NEDE_ENV}`})
-//llamado de las los end points, index
+import http from "http";
+import routes from "./routes/routes"
 
 const server = express()
-
-morgan.token("date", (req:Request, res:Response) => {
-    const date = new Date();
-    const localDate = date.setTime(
-        date.getTime() - date.getTimezoneOffset() * 60000
-    )
-    return new Date(localDate).toISOString();
-})
-
-const customMorgan = ':remote-addr - :remote-user [:date] ":method :url HTTP/:http-version" :status :res[content-length]';
-
-server.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : customMorgan))
 
 server.use(express.json());
 server.use(cors());
 
-// server.use('/api', routes); //cuando tenga los endpoints
+//socket
+const httpServer = http.createServer(server);
+const wss = new WebSocketServer({ server: httpServer });
 
+wss.on("connection", (socket: WebSocket) => {
+  handlerNewsSocketConnection(socket, wss);
+});
 
-//cuando tenga la conexión a la DB, sincronizar
-server.listen(process.env.PORT, async () => {
-    console.log("Escuchando en el puerto", process.env.PORT);
-    try {
-        await prisma.$connect();
-        console.log("Conexión a la base de datos establecida con éxito");
-    } catch (error) {
-        console.log("Error al levantar servidor:", error);
-    }
+server.use("/", routes);
+
+const PORT = Number(process.env.SOCKET_PORT);
+
+httpServer.listen(PORT, () => {
+  console.log(`Escuchando socket en 0.0.0.0:${PORT}`);
 });
 
