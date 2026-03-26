@@ -19,8 +19,8 @@ export function handlerNewsSocketConnection(socket: WebSocket, wss: WebSocketSer
 
   socket.send(
     JSON.stringify({
-      type: "CONNECTED",
-      message: "Conection success",
+        type: "CONNECTED",
+        message: "Conection success",
     })
   );
 
