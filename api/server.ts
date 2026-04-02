@@ -16,15 +16,12 @@ server.use(cors());
 //socket
 const httpServer = http.createServer(server);
 const wss = new WebSocketServer({ server: httpServer });
-const NEWS_BROADCAST_INTERVAL_MS = Number(
-  process.env.NEWS_BROADCAST_INTERVAL_MS ?? 300000
-);
 
 wss.on("connection", (socket: WebSocket) => {
   handlerNewsSocketConnection(socket, wss);
 });
 
-startNewsBroadcastScheduler(wss, NEWS_BROADCAST_INTERVAL_MS);
+startNewsBroadcastScheduler(wss);
 
 server.use("/", routes);
 
