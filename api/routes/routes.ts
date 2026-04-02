@@ -1,8 +1,7 @@
-import { Router } from "express"
-const router = Router()
-import newsSocket from "./news"
+import { Router } from "express";
+const router = Router();
+import newsSocket from "./news";
 
-router.use("/news", newsSocket )
+router.use("/news", newsSocket);
 
-
-export default router
+export default router;
