@@ -23,9 +23,10 @@ export async function broadcastNotification(wss: WebSocketServer) {
 
 export function startNewsBroadcastScheduler(
   wss: WebSocketServer,
-  intervalMs = 5 * 60 * 1000
+  intervalMs = 3 * 60 * 1000
 ) {
   setInterval(() => {
+    console.log("Enviando notificaciones")
     void broadcastNotification(wss);
   }, intervalMs);
 }
