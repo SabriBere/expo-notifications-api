@@ -1,11 +1,14 @@
-import express from "express"
+import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
-import { handlerNewsSocketConnection } from "./sockets/newsSocket";
-import cors from "cors"
+import {
+  handlerNewsSocketConnection,
+  startNewsBroadcastScheduler,
+} from "./sockets/newsSocket";
+import cors from "cors";
 import http from "http";
-import routes from "./routes/routes"
+import routes from "./routes/routes";
 
-const server = express()
+const server = express();
 
 server.use(express.json());
 server.use(cors());
@@ -18,6 +21,8 @@ wss.on("connection", (socket: WebSocket) => {
   handlerNewsSocketConnection(socket, wss);
 });
 
+startNewsBroadcastScheduler(wss);
+
 server.use("/", routes);
 
 const PORT = Number(process.env.SOCKET_PORT);
@@ -25,4 +30,3 @@ const PORT = Number(process.env.SOCKET_PORT);
 httpServer.listen(PORT, () => {
   console.log(`Escuchando socket en 0.0.0.0:${PORT}`);
 });
-

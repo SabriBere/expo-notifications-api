@@ -4,4 +4,4 @@ const router = Router();
 
 router.get("/getAll", NewsControllers.getNews);
 
-export default router
+export default router;
