@@ -5,6 +5,10 @@
   "main": "server.ts",
   "scripts": {
     "dev": "dotenvx run --env-file=.env.development -- nodemon api/server.ts",
+    "format": "prettier --write .",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init_sqlite_alerts",
+    "prisma:seed": "prisma db seed",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Sabrina Demetrio",
@@ -23,16 +27,21 @@
     "globals": "^17.4.0",
     "nodemon": "^3.1.4",
     "prettier": "^3.8.1",
+    "prisma": "^5.11.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.2"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.1.0",
+    "@openai/codex": "^0.118.0",
     "@prisma/client": "^5.11.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "morgan": "^1.10.0",
     "ws": "^8.19.0"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }
