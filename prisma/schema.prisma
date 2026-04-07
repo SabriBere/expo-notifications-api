@@ -19,3 +19,10 @@ model Alert {
   ConsultasId Int    @unique
   NoticiaId   Int    @unique
 }
+
+model PushToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
