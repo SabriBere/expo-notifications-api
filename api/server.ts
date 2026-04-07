@@ -25,8 +25,8 @@ startNewsBroadcastScheduler(wss);
 
 server.use("/", routes);
 
-const PORT = Number(process.env.SOCKET_PORT);
+const PORT = Number(process.env.PORT ?? process.env.SOCKET_PORT);
 
 httpServer.listen(PORT, () => {
-  console.log(`Escuchando socket en 0.0.0.0:${PORT}`);
+  console.log(`Escuchando backend HTTP/WebSocket en 0.0.0.0:${PORT}`);
 });
