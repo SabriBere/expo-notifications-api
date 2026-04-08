@@ -5,17 +5,17 @@ import {
   startNewsBroadcastScheduler,
 } from "./sockets/newsSocket";
 import cors from "cors";
-import http from "http";
 import routes from "./routes/routes";
 
 const server = express();
+const HTTP_PORT = Number(process.env.PORT ?? 8000);
+const SOCKET_PORT = Number(process.env.SOCKET_PORT ?? HTTP_PORT + 1);
 
 server.use(express.json());
 server.use(cors());
+server.use("/", routes);
 
-//socket
-const httpServer = http.createServer(server);
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({ port: SOCKET_PORT });
 
 wss.on("connection", (socket: WebSocket) => {
   handlerNewsSocketConnection(socket, wss);
@@ -23,10 +23,10 @@ wss.on("connection", (socket: WebSocket) => {
 
 startNewsBroadcastScheduler(wss);
 
-server.use("/", routes);
+server.listen(HTTP_PORT, () => {
+  console.log(`Escuchando backend HTTP en 0.0.0.0:${HTTP_PORT}`);
+});
 
-const PORT = Number(process.env.PORT ?? process.env.SOCKET_PORT);
-
-httpServer.listen(PORT, () => {
-  console.log(`Escuchando backend HTTP/WebSocket en 0.0.0.0:${PORT}`);
+wss.on("listening", () => {
+  console.log(`Escuchando backend WebSocket en 0.0.0.0:${SOCKET_PORT}`);
 });
