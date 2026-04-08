@@ -180,7 +180,7 @@ export function startNewsBroadcastScheduler(
   intervalMs = 3 * 60 * 1000
 ) {
   setInterval(() => {
-    console.log("Enviando notificaciones push");
+    console.log("Sending notifications push");
     void dispatchPushNotifications();
   }, intervalMs);
 }
