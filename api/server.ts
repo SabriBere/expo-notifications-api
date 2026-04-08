@@ -21,7 +21,7 @@ wss.on("connection", (socket: WebSocket) => {
   handlerNewsSocketConnection(socket, wss);
 });
 
-startNewsBroadcastScheduler(wss);
+startNewsBroadcastScheduler();
 
 server.listen(HTTP_PORT, () => {
   console.log(`Escuchando backend HTTP en 0.0.0.0:${HTTP_PORT}`);

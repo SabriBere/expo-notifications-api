@@ -136,20 +136,38 @@ async function sendExpoNotifications(alerts: AlertPayload[]) {
   }
 }
 
-export async function broadcastNotification(wss: WebSocketServer) {
+async function getAlertsForDelivery() {
   const { error, data } = await NewsServices.getAllNews();
 
   if (error) {
-    console.error("No se pudieron emitir las alertas por socket");
+    console.error("No se pudieron obtener las alertas para envío");
+    return null;
+  }
+
+  return data as AlertPayload[];
+}
+
+export async function dispatchPushNotifications() {
+  const alerts = await getAlertsForDelivery();
+
+  if (!alerts) {
+    return;
+  }
+
+  await sendExpoNotifications(alerts);
+}
+
+export async function broadcastSocketNotifications(wss: WebSocketServer) {
+  const alerts = await getAlertsForDelivery();
+
+  if (!alerts) {
     return;
   }
 
   const payload = JSON.stringify({
     type: "newsNotification",
-    data,
+    data: alerts,
   });
-
-  await sendExpoNotifications(data);
 
   wss.clients.forEach((client: WebSocket) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -159,12 +177,11 @@ export async function broadcastNotification(wss: WebSocketServer) {
 }
 
 export function startNewsBroadcastScheduler(
-  wss: WebSocketServer,
   intervalMs = 3 * 60 * 1000
 ) {
   setInterval(() => {
-    console.log("Enviando notificaciones")
-    void broadcastNotification(wss);
+    console.log("Enviando notificaciones push");
+    void dispatchPushNotifications();
   }, intervalMs);
 }
 
@@ -183,7 +200,7 @@ export function handlerNewsSocketConnection(
 
   socket.on("message", (message) => {
     if (message) {
-      void broadcastNotification(wss);
+      void broadcastSocketNotifications(wss);
     }
     console.info("Message form client", message.toString());
   });
