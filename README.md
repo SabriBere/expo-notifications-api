@@ -232,62 +232,122 @@ prisma/
 
 ### Layered Pattern
 
-The project follows a lightweight layered architecture:
+The backend now follows a lightweight layered pattern with two complementary flows:
 
-- **Routes:** define the public API surface.
-- **Controllers:** receive the request and shape the HTTP response.
-- **Services:** execute database-related operations and business logic.
-- **Sockets:** handle real-time delivery and Expo push integration.
-- **Prisma:** acts as the persistence layer over SQLite.
+- **HTTP flow:** `routes -> controllers -> services -> Prisma`
+- **Delivery flow:** `scheduler / socket events -> socket handlers -> services -> Prisma / Expo / WebSocket clients`
 
-Flow:
+Responsibilities by layer:
 
-`HTTP / Socket -> Controller / Socket Handler -> Service -> Prisma -> Database`
+- **Routes:** expose the HTTP endpoints (`/news/getAll` and `/push-tokens/register`).
+- **Controllers:** validate input, map service results to HTTP responses, and keep the transport layer thin.
+- **Services:** centralize data access for alerts and Expo push tokens.
+- **Socket handlers:** coordinate realtime delivery, map alerts to the frontend payload, send Expo notifications, broadcast over WebSocket, and remove invalid tokens.
+- **Prisma:** persists alerts and registered push tokens in SQLite.
+
+Current backend flow:
+
+- **News query:** `HTTP request -> route -> controller -> service -> Prisma -> database`
+- **Token registration:** `HTTP request -> route -> controller -> service -> Prisma -> database`
+- **Notification delivery:** `scheduler or socket message -> socket handler -> services -> Prisma -> Expo / connected WebSocket clients`
 
 ## Communication Flow Diagram
 
-The current communication flow can be summarized like this:
+To avoid mixing responsibilities, the backend flow is split into two diagrams:
+
+### HTTP Flow
 
 ```text
-                     TestNotifications Mobile App
-                  (Expo client / physical device)
-                               |
-                               | 1. POST /push-tokens/register
-                               v
-                    +---------------------------+
-                    |      SocketBack API       |
-                    |  Express + WebSocket +    |
-                    |  broadcast scheduler      |
-                    +---------------------------+
-                      |           |          |
-                      |           |          |
-                      |           |          +-------------------+
-                      |           |                              |
-                      |           | 4. Push payloads             |
-                      |           v                              v
-                      |   +----------------+          +----------------------+
-                      |   | Prisma Client  |          | Expo Push Services   |
-                      |   +----------------+          +----------------------+
-                      |           |                              |
-                      |           | 2. Read alerts /             | 5. Deliver push
-                      |           |    save tokens               |    notifications
-                      |           v                              |
-                      |   +----------------+                     |
-                      |   | SQLite DB      |                     |
-                      |   +----------------+                     |
-                      |                                          |
-                      +------------------------------------------+
-                               3. WebSocket broadcast
+    Mobile App / API Client
+              |
+              | 1. HTTP request
+              v
+        +-------------+
+        |   Routes    |
+        +-------------+
+              |
+              | 2. delegate request
+              v
+        +-------------+
+        | Controllers |
+        +-------------+
+              |
+              | 3. validate / shape response
+              v
+        +-------------+
+        |  Services   |
+        +-------------+
+              |
+              | 4. query or persist data
+              v
+        +-------------+
+        |   Prisma    |
+        +-------------+
+              |
+              | 5. read / write
+              v
+        +-------------+
+        |  SQLite DB  |
+        +-------------+
 ```
 
-### Broadcast Sequence
+### Notification Delivery Flow
 
-1. The mobile app registers an Expo push token through the HTTP API.
-2. The backend stores the token in the `PushToken` table.
-3. Every 3 minutes, the scheduler loads alerts from the `Alert` table.
-4. The backend broadcasts the alert payload to connected WebSocket clients.
-5. The same alert data is transformed into Expo push messages and sent to Expo Push Services.
-6. If Expo reports `DeviceNotRegistered`, the backend deletes those invalid tokens from the database.
+```text
+        Scheduler (every 3 min)         WebSocket client
+                 |                              |
+                 | 1. trigger                   | 1. send message
+                 +---------------+--------------+
+                                 |
+                                 v
+                      +-------------------+
+                      |  Socket Handlers  |
+                      +-------------------+
+                                 |
+                                 | 2. load alerts / tokens
+                                 v
+                           +-----------+
+                           | Services  |
+                           +-----------+
+                                 |
+                                 | 3. query data
+                                 v
+                           +-----------+
+                           |  Prisma   |
+                           +-----------+
+                                 |
+                                 | 4. read data
+                                 v
+                           +-----------+
+                           | SQLite DB |
+                           +-----------+
+                                 |
+                +----------------+----------------+
+                |                                 |
+                | 5a. broadcast alerts            | 5b. send Expo payloads
+                v                                 v
+      Connected WebSocket Clients         Expo Push Services
+                                                    |
+                                                    | 6. report invalid tokens
+                                                    v
+                                           Socket Handlers -> Services -> Prisma
+```
+
+### HTTP Sequence
+
+1. A client calls `/news/getAll` or `/push-tokens/register`.
+2. The route forwards the request to the corresponding controller.
+3. The controller validates input and delegates the operation to a service.
+4. The service reads or writes data through Prisma.
+5. The controller returns the HTTP response.
+
+### Notification Sequence
+
+1. The flow starts either from the scheduler or from an incoming WebSocket message.
+2. The socket handler loads alerts and registered Expo tokens through the services.
+3. Alerts are broadcast to connected WebSocket clients.
+4. The same alerts are mapped to the frontend payload and sent to Expo Push Services.
+5. If Expo reports `DeviceNotRegistered`, the backend deletes those invalid tokens from the database.
 
 ## Database and Prisma
 
@@ -319,16 +379,3 @@ The project includes basic code quality tooling:
 
 - **Prettier:** configured in `.prettierrc`
 - **ESLint:** configured in `eslint.config.ts`
-
-Current Prettier settings include:
-
-- semicolons enabled,
-- double quotes,
-- `printWidth` of `80`,
-- `tabWidth` of `2`.
-
-The ESLint setup uses:
-
-- `@eslint/js`
-- `typescript-eslint`
-- `eslint-config-prettier`
