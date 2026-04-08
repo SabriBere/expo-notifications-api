@@ -187,8 +187,9 @@ Current behavior:
 - the backend starts Express and WebSocket as separate listeners,
 - `GET /news/getAll` returns all stored alerts,
 - `POST /push-tokens/register` stores Expo push tokens,
-- a scheduler emits notifications every 3 minutes,
-- each broadcast also sends push notifications through `https://exp.host/--/api/v2/push/send`.
+- a scheduler emits push notifications every 3 minutes,
+- the WebSocket server broadcasts realtime payloads independently,
+- push notifications are sent through `https://exp.host/--/api/v2/push/send`.
 
 ## Architecture
 
@@ -224,7 +225,7 @@ prisma/
 - **`api/routes/`**: defines the public HTTP endpoints.
 - **`api/controllers/`**: handles request/response logic and delegates to services.
 - **`api/services/`**: contains the data access and domain operations for alerts and push tokens.
-- **`api/sockets/newsSocket.ts`**: manages socket connections, periodic broadcasting, payload mapping, Expo push delivery, and invalid token cleanup.
+- **`api/sockets/newsSocket.ts`**: manages socket connections, periodic push delivery, payload mapping, realtime socket broadcasting, and invalid token cleanup.
 - **`api/config/db.ts`**: initializes the Prisma client.
 - **`prisma/schema.prisma`**: defines the `Alert` and `PushToken` models.
 - **`prisma/migrations/`**: stores schema migration history.
