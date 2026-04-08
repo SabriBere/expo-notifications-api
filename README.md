@@ -35,7 +35,7 @@ At the moment, this backend acts as a lightweight notification gateway between t
 The backend currently includes:
 
 - an Express HTTP server,
-- a WebSocket server running on the same HTTP server instance,
+- a standalone WebSocket server,
 - a Prisma data layer using SQLite,
 - an alerts endpoint,
 - a push-token registration endpoint,
@@ -95,7 +95,7 @@ Variables used by the backend:
 
 - `NODE_ENV`: application environment.
 - `PORT`: HTTP server port.
-- `SOCKET_PORT`: fallback port if `PORT` is not defined.
+- `SOCKET_PORT`: WebSocket server port.
 - `DATABASE_URL`: Prisma connection string.
 
 Current local example from `.env.development`:
@@ -107,7 +107,7 @@ SOCKET_PORT=8001
 DATABASE_URL="file:./dev.db"
 ```
 
-> **Note:** in the current implementation, HTTP and WebSocket run on the same server instance. If `PORT` is defined, that is the port used by both services.
+> **Note:** in the current implementation, HTTP and WebSocket run as separate servers. `PORT` is used for the REST API and `SOCKET_PORT` is used for the WebSocket server.
 
 ## Installation
 
@@ -184,7 +184,7 @@ The backend integrates with three main layers:
 
 Current behavior:
 
-- the server boots Express and WebSocket on top of the same HTTP server,
+- the backend starts Express and WebSocket as separate listeners,
 - `GET /news/getAll` returns all stored alerts,
 - `POST /push-tokens/register` stores Expo push tokens,
 - a scheduler emits notifications every 3 minutes,
@@ -220,7 +220,7 @@ prisma/
 
 ### General Description
 
-- **`api/server.ts`**: application entrypoint. Boots Express, CORS, HTTP server, WebSocket server, routes, and scheduler.
+- **`api/server.ts`**: application entrypoint. Boots Express, CORS, the HTTP server, the standalone WebSocket server, routes, and scheduler.
 - **`api/routes/`**: defines the public HTTP endpoints.
 - **`api/controllers/`**: handles request/response logic and delegates to services.
 - **`api/services/`**: contains the data access and domain operations for alerts and push tokens.
