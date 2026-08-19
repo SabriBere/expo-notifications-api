@@ -14,7 +14,7 @@ business domain.
 - standalone WebSocket server
 - SQLite persistence through Prisma
 - idempotent Expo push-token registration
-- scheduled delivery through Expo Push Service
+- idempotent scheduled delivery through Expo Push Service
 - generic, seeded demo notifications
 
 ## Requirements
@@ -150,8 +150,14 @@ Scheduler
   └─ every 3 minutes
        ├─ load demo notifications
        ├─ load registered tokens
-       └─ send through Expo Push Service
+       ├─ claim each notification/token pair once
+       └─ send pending deliveries through Expo Push Service
 ```
+
+Successful deliveries are persisted by notification and push-token ID. Later
+scheduler runs skip those pairs, and an in-process lock prevents overlapping
+runs. Failed requests release their claims so they can be retried, while stale
+claims left by an interrupted process become eligible again after ten minutes.
 
 ## Project structure
 
@@ -183,10 +189,11 @@ prisma/
 ## Security notes
 
 - Do not commit real device tokens or production databases.
+- Device tokens and WebSocket message bodies are not written to application logs.
 - Do not place Firebase service-account keys in this repository.
 - Expo push credentials belong in EAS Credentials.
 - All checked-in sample records are fictional.
 
 ## License
 
-ISC
+MIT. See [LICENSE](LICENSE).

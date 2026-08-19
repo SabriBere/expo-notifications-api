@@ -1,5 +1,9 @@
 import { prisma } from "../config/db";
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unexpected database error";
+}
+
 class PushTokenServices {
   static async registerToken(token: string) {
     try {
@@ -10,8 +14,8 @@ class PushTokenServices {
       });
 
       return { status: 200, error: false, data: pushToken };
-    } catch (error: any) {
-      return { status: 500, error: true, data: error.message };
+    } catch (error: unknown) {
+      return { status: 500, error: true, data: getErrorMessage(error) };
     }
   }
 
@@ -22,28 +26,28 @@ class PushTokenServices {
       });
 
       return { status: 200, error: false, data: pushTokens };
-    } catch (error: any) {
-      return { status: 500, error: true, data: error.message };
+    } catch (error: unknown) {
+      return { status: 500, error: true, data: getErrorMessage(error) };
     }
   }
 
-  static async deleteTokens(tokens: string[]) {
-    if (tokens.length === 0) {
+  static async deleteTokensById(ids: number[]) {
+    if (ids.length === 0) {
       return { status: 200, error: false, data: [] };
     }
 
     try {
       const deleted = await prisma.pushToken.deleteMany({
         where: {
-          token: {
-            in: tokens,
+          id: {
+            in: ids,
           },
         },
       });
 
       return { status: 200, error: false, data: deleted };
-    } catch (error: any) {
-      return { status: 500, error: true, data: error.message };
+    } catch (error: unknown) {
+      return { status: 500, error: true, data: getErrorMessage(error) };
     }
   }
 }

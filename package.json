@@ -1,18 +1,41 @@
 {
   "name": "socketback",
   "version": "1.0.0",
-  "description": "Repositorio para generar end point websocket",
-  "main": "server.ts",
+  "description": "Demo backend for Expo push notifications, WebSockets, and deep-link testing",
+  "main": "dist/api/server.js",
   "scripts": {
     "dev": "dotenvx run --env-file=.env.development -- nodemon api/server.ts",
+    "build": "tsc",
+    "start": "node dist/api/server.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init_sqlite_alerts",
-    "prisma:seed": "prisma db seed",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prisma:migrate": "dotenvx run --env-file=.env.development -- prisma migrate deploy",
+    "prisma:migrate:create": "dotenvx run --env-file=.env.development -- prisma migrate dev",
+    "prisma:seed": "dotenvx run --env-file=.env.development -- prisma db seed"
   },
   "author": "Sabrina Demetrio",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SabriBere/socket-back.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SabriBere/socket-back/issues"
+  },
+  "homepage": "https://github.com/SabriBere/socket-back#readme",
+  "keywords": [
+    "expo",
+    "push-notifications",
+    "websocket",
+    "prisma",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.17",

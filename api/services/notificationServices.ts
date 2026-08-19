@@ -1,5 +1,9 @@
 import { prisma } from "../config/db";
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unexpected database error";
+}
+
 class NotificationServices {
   static async getAllNotifications() {
     try {
@@ -10,8 +14,8 @@ class NotificationServices {
       });
 
       return { status: 200, error: false, data: notifications };
-    } catch (error: any) {
-      return { status: 500, error: true, data: error.message };
+    } catch (error: unknown) {
+      return { status: 500, error: true, data: getErrorMessage(error) };
     }
   }
 }

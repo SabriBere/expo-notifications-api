@@ -9,15 +9,16 @@ class PushTokenControllers {
       return res.status(400).json({ data: "token is required" });
     }
 
-    console.info("Registering Expo push token", token);
+    console.info("Registering Expo push token");
 
-    const { status, error, data } = await PushTokenServices.registerToken(token);
+    const { status, error, data } =
+      await PushTokenServices.registerToken(token);
 
     if (error) {
       return res.status(status).json({ data });
     }
 
-    return res.status(200).json({ data });
+    return res.status(200).json({ data: { registered: true } });
   }
 }
 
