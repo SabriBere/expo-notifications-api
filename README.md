@@ -136,7 +136,18 @@ Connecting to `ws://localhost:8001` returns:
 }
 ```
 
-Sending any message requests a broadcast with this shape:
+Send this JSON message to request a notification broadcast:
+
+```json
+{
+  "type": "requestNotifications"
+}
+```
+
+The server rejects binary messages, invalid JSON and unknown event types. HTTP
+and WebSocket request payloads are limited to 16 KB.
+
+Successful requests receive a broadcast with this shape:
 
 ```json
 {

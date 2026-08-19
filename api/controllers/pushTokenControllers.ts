@@ -9,10 +9,16 @@ class PushTokenControllers {
       return res.status(400).json({ data: "token is required" });
     }
 
+    const normalizedToken = token.trim();
+    const { Expo } = await import("expo-server-sdk");
+    if (!Expo.isExpoPushToken(normalizedToken)) {
+      return res.status(400).json({ data: "invalid Expo push token" });
+    }
+
     console.info("Registering Expo push token");
 
     const { status, error, data } =
-      await PushTokenServices.registerToken(token);
+      await PushTokenServices.registerToken(normalizedToken);
 
     if (error) {
       return res.status(status).json({ data });

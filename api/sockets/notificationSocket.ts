@@ -30,6 +30,33 @@ type ExpoPushResponse = {
   data?: ExpoPushTicket[];
 };
 
+type SocketRequest = {
+  type: "requestNotifications";
+};
+
+function sendSocketError(socket: WebSocket, code: string, message: string) {
+  socket.send(JSON.stringify({ type: "error", code, message }));
+}
+
+function parseSocketRequest(rawMessage: string): SocketRequest | null {
+  try {
+    const payload: unknown = JSON.parse(rawMessage);
+
+    if (
+      typeof payload !== "object" ||
+      payload === null ||
+      !("type" in payload) ||
+      payload.type !== "requestNotifications"
+    ) {
+      return null;
+    }
+
+    return { type: payload.type };
+  } catch {
+    return null;
+  }
+}
+
 function getNotificationIcon(sourceType: string) {
   switch (sourceType) {
     case "web":
@@ -222,10 +249,27 @@ export function handleNotificationSocketConnection(
     })
   );
 
-  socket.on("message", (message) => {
-    if (message) {
-      void broadcastSocketNotifications(wss);
+  socket.on("message", (message, isBinary) => {
+    if (isBinary) {
+      sendSocketError(
+        socket,
+        "unsupported_payload",
+        "Binary messages are not supported"
+      );
+      return;
     }
+
+    const request = parseSocketRequest(message.toString());
+    if (!request) {
+      sendSocketError(
+        socket,
+        "invalid_message",
+        'Expected {"type":"requestNotifications"}'
+      );
+      return;
+    }
+
+    void broadcastSocketNotifications(wss);
     console.info("Message received from notification socket client");
   });
 
