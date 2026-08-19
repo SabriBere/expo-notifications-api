@@ -77,11 +77,13 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-# .env
-# .env.development.local
-# .env.test.local
-# .env.production.local
-# .env.local
+.env
+.env.*
+!.env.example
+
+# Local Prisma databases
+prisma/*.db
+prisma/*.db-journal
 
 # Build for production
 dist

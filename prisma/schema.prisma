@@ -7,17 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Alert {
-  id          Int    @id @default(autoincrement())
-  Title       String
-  Tier        Int
-  Tone        Int
-  MediaType   Int
-  Media       String
-  Section     String
-  Link        String
-  ConsultasId Int    @unique
-  NoticiaId   Int    @unique
+model DemoNotification {
+  id         Int    @id @default(autoincrement())
+  itemId     Int    @unique
+  contextId  Int    @unique
+  title      String
+  sourceType String
+  source     String
+  category   String
+  link       String
 }
 
 model PushToken {
