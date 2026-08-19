@@ -228,7 +228,9 @@ async function sendGenericExpoNotification() {
   const responseData = (await response.json()) as ExpoPushResponse;
 
   if (!response.ok) {
-    console.error("Expo generic push service error", { status: response.status });
+    console.error("Expo generic push service error", {
+      status: response.status,
+    });
     return;
   }
 
