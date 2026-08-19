@@ -1,8 +1,10 @@
 import { WebSocketServer, WebSocket } from "ws";
 import NotificationServices from "../services/notificationServices";
+import PushDeliveryServices from "../services/pushDeliveryServices";
 import PushTokenServices from "../services/pushTokenServices";
 
 type DemoNotification = {
+  id: number;
   itemId: number;
   contextId: number;
   title: string;
@@ -13,13 +15,14 @@ type DemoNotification = {
 };
 
 type PushTokenRecord = {
+  id: number;
   token: string;
 };
 
 type ExpoPushTicket = {
+  status?: "ok" | "error";
   details?: {
     error?: string;
-    expoPushToken?: string;
   };
 };
 
@@ -58,52 +61,99 @@ async function sendExpoNotifications(notifications: DemoNotification[]) {
     return;
   }
 
-  const recipients = (data as PushTokenRecord[])
-    .map((item) => item.token)
-    .filter(Boolean);
+  const recipients = (data as PushTokenRecord[]).filter((item) => item.token);
 
   if (recipients.length === 0) {
     console.info("No Expo push tokens are registered");
     return;
   }
 
-  const messages = recipients.flatMap((token) =>
-    notifications.map((notification) => ({
-      to: token,
-      title: `${getNotificationIcon(notification.sourceType)} ${notification.title}`,
-      body: `${notification.source} · ${notification.category}`,
-      sound: "default",
-      channelId: "default",
-      data: toPushData(notification),
-    }))
-  );
+  const claimedDeliveries: Array<{
+    notification: DemoNotification;
+    recipient: PushTokenRecord;
+  }> = [];
 
-  const response = await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(messages),
-  });
-
-  const responseData = (await response.json()) as ExpoPushResponse;
-  const invalidTokens = (responseData.data ?? [])
-    .filter((item) => item?.details?.error === "DeviceNotRegistered")
-    .map((item) => item?.details?.expoPushToken)
-    .filter((token): token is string => Boolean(token));
-
-  if (invalidTokens.length > 0) {
-    await PushTokenServices.deleteTokens(invalidTokens);
+  for (const recipient of recipients) {
+    for (const notification of notifications) {
+      if (await PushDeliveryServices.claim(notification.id, recipient.id)) {
+        claimedDeliveries.push({ notification, recipient });
+      }
+    }
   }
 
+  if (claimedDeliveries.length === 0) {
+    console.info("No pending push notifications to deliver");
+    return;
+  }
+
+  const messages = claimedDeliveries.map(({ notification, recipient }) => ({
+    to: recipient.token,
+    title: `${getNotificationIcon(notification.sourceType)} ${notification.title}`,
+    body: `${notification.source} · ${notification.category}`,
+    sound: "default",
+    channelId: "default",
+    data: toPushData(notification),
+  }));
+
+  let response: Response;
+  try {
+    response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(messages),
+    });
+  } catch {
+    await Promise.all(
+      claimedDeliveries.map(({ notification, recipient }) =>
+        PushDeliveryServices.release(notification.id, recipient.id)
+      )
+    );
+    console.error("Expo push request failed");
+    return;
+  }
+
+  const responseData = (await response.json()) as ExpoPushResponse;
+  const tickets = responseData.data ?? [];
+
   if (!response.ok) {
-    console.error("Expo push service error", responseData);
+    await Promise.all(
+      claimedDeliveries.map(({ notification, recipient }) =>
+        PushDeliveryServices.release(notification.id, recipient.id)
+      )
+    );
+    console.error("Expo push service error", { status: response.status });
+    return;
+  }
+
+  const invalidTokenIds = new Set<number>();
+
+  await Promise.all(
+    claimedDeliveries.map(async ({ notification, recipient }, index) => {
+      const ticket = tickets[index];
+
+      if (ticket?.status === "ok") {
+        await PushDeliveryServices.markDelivered(notification.id, recipient.id);
+        return;
+      }
+
+      if (ticket?.details?.error === "DeviceNotRegistered") {
+        invalidTokenIds.add(recipient.id);
+        return;
+      }
+
+      await PushDeliveryServices.release(notification.id, recipient.id);
+    })
+  );
+
+  if (invalidTokenIds.size > 0) {
+    await PushTokenServices.deleteTokensById([...invalidTokenIds]);
   }
 }
 
 async function getNotificationsForDelivery() {
-  const { error, data } =
-    await NotificationServices.getAllNotifications();
+  const { error, data } = await NotificationServices.getAllNotifications();
 
   if (error) {
     console.error("Could not load demo notifications for delivery");
@@ -139,9 +189,23 @@ export async function broadcastSocketNotifications(wss: WebSocketServer) {
 }
 
 export function startNotificationScheduler(intervalMs = 3 * 60 * 1000) {
-  setInterval(() => {
+  let isDispatchRunning = false;
+
+  setInterval(async () => {
+    if (isDispatchRunning) {
+      console.warn("Skipping overlapping notification scheduler run");
+      return;
+    }
+
+    isDispatchRunning = true;
     console.log("Sending demo push notifications");
-    void dispatchPushNotifications();
+    try {
+      await dispatchPushNotifications();
+    } catch {
+      console.error("Notification scheduler run failed");
+    } finally {
+      isDispatchRunning = false;
+    }
   }, intervalMs);
 }
 
@@ -162,7 +226,7 @@ export function handleNotificationSocketConnection(
     if (message) {
       void broadcastSocketNotifications(wss);
     }
-    console.info("Message from client", message.toString());
+    console.info("Message received from notification socket client");
   });
 
   socket.on("close", () => {

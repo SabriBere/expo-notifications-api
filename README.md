@@ -1,6 +1,6 @@
 # SocketBack
 
-Generic demo backend for the TestNotifications mobile application. It exposes
+Generic demo backend for the expo-push-notifications mobile application. It exposes
 an HTTP API, stores Expo push tokens, sends sample push notifications, and
 broadcasts demo items over WebSocket.
 
@@ -8,13 +8,30 @@ The repository intentionally uses invented data and neutral field names. It is
 designed as a public technical lab rather than an integration with a real
 business domain.
 
+## Companion project
+
+This backend is designed to work with
+[expo-push-notifications](https://github.com/SabriBere/expo-push-notifications), an Expo /
+React Native mobile client used to test push notifications, deep linking and
+WebSocket communication.
+
+```text
+expo-push-notifications (Expo / React Native)
+              ↕
+      HTTP + WebSocket
+              ↕
+socket-back (Node.js / Express / Prisma)
+              ↓
+       Expo Push Service
+```
+
 ## Features
 
 - Express HTTP API
 - standalone WebSocket server
 - SQLite persistence through Prisma
 - idempotent Expo push-token registration
-- scheduled delivery through Expo Push Service
+- idempotent scheduled delivery through Expo Push Service
 - generic, seeded demo notifications
 
 ## Requirements
@@ -150,8 +167,14 @@ Scheduler
   └─ every 3 minutes
        ├─ load demo notifications
        ├─ load registered tokens
-       └─ send through Expo Push Service
+       ├─ claim each notification/token pair once
+       └─ send pending deliveries through Expo Push Service
 ```
+
+Successful deliveries are persisted by notification and push-token ID. Later
+scheduler runs skip those pairs, and an in-process lock prevents overlapping
+runs. Failed requests release their claims so they can be retried, while stale
+claims left by an interrupted process become eligible again after ten minutes.
 
 ## Project structure
 
@@ -180,13 +203,6 @@ prisma/
 └── seed.ts
 ```
 
-## Security notes
-
-- Do not commit real device tokens or production databases.
-- Do not place Firebase service-account keys in this repository.
-- Expo push credentials belong in EAS Credentials.
-- All checked-in sample records are fictional.
-
 ## License
 
-ISC
+MIT. See [LICENSE](LICENSE).

@@ -16,6 +16,7 @@ model DemoNotification {
   source     String
   category   String
   link       String
+  deliveries PushDelivery[]
 }
 
 model PushToken {
@@ -23,4 +24,19 @@ model PushToken {
   token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deliveries PushDelivery[]
+}
+
+model PushDelivery {
+  id             Int               @id @default(autoincrement())
+  notificationId Int
+  pushTokenId    Int
+  status         String            @default("pending")
+  createdAt      DateTime          @default(now())
+  deliveredAt    DateTime?
+  notification   DemoNotification  @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  pushToken      PushToken          @relation(fields: [pushTokenId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, pushTokenId])
+  @@index([status])
 }
