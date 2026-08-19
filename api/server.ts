@@ -11,11 +11,14 @@ const server = express();
 const HTTP_PORT = Number(process.env.PORT ?? 8000);
 const SOCKET_PORT = Number(process.env.SOCKET_PORT ?? HTTP_PORT + 1);
 
-server.use(express.json());
+server.use(express.json({ limit: "16kb" }));
 server.use(cors());
 server.use("/", routes);
 
-const wss = new WebSocketServer({ port: SOCKET_PORT });
+const wss = new WebSocketServer({
+  port: SOCKET_PORT,
+  maxPayload: 16 * 1024,
+});
 
 wss.on("connection", (socket: WebSocket) => {
   handleNotificationSocketConnection(socket, wss);
