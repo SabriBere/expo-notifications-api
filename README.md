@@ -1,4 +1,4 @@
-# SocketBack
+# Expo notifications api
 
 Generic demo backend for the expo-push-notifications mobile application. It exposes
 an HTTP API, stores Expo push tokens, and sends sample push notifications.
