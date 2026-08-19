@@ -1,0 +1,38 @@
+export const demoNotifications = [
+  {
+    itemId: 101,
+    contextId: 1001,
+    title: "A new demo item is ready to review",
+    sourceType: "web",
+    source: "Demo Feed",
+    category: "Product updates",
+    link: "https://example.com/demo/101",
+  },
+  {
+    itemId: 102,
+    contextId: 1002,
+    title: "Background processing completed successfully",
+    sourceType: "system",
+    source: "Automation Lab",
+    category: "System events",
+    link: "https://example.com/demo/102",
+  },
+  {
+    itemId: 103,
+    contextId: 1003,
+    title: "Your weekly demo summary is available",
+    sourceType: "email",
+    source: "Sample Digest",
+    category: "Summaries",
+    link: "https://example.com/demo/103",
+  },
+  {
+    itemId: 104,
+    contextId: 1004,
+    title: "A shared workspace item was updated",
+    sourceType: "collaboration",
+    source: "Demo Workspace",
+    category: "Collaboration",
+    link: "https://example.com/demo/104",
+  },
+];

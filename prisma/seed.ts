@@ -1,19 +1,19 @@
 import { PrismaClient } from "@prisma/client";
-import { notificationsHistory } from "../mocks/mockUpsAlert";
+import { demoNotifications } from "../mocks/demoNotifications";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.alert.deleteMany();
+  await prisma.demoNotification.deleteMany();
 
-  await prisma.alert.createMany({
-    data: notificationsHistory,
+  await prisma.demoNotification.createMany({
+    data: demoNotifications,
   });
 }
 
 main()
   .catch((error) => {
-    console.error("Error seeding alerts", error);
+    console.error("Error seeding demo notifications", error);
     process.exit(1);
   })
   .finally(async () => {
