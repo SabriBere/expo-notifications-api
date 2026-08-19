@@ -1,5 +1,5 @@
 {
-  "name": "socketback",
+  "name": "expo-notifications-api",
   "version": "1.0.0",
   "description": "Demo backend for Expo push notifications and deep-link testing",
   "main": "dist/api/server.js",
@@ -20,12 +20,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SabriBere/socket-back.git"
+    "url": "git+https://github.com/SabriBere/expo-notifications-api.git"
   },
   "bugs": {
-    "url": "https://github.com/SabriBere/socket-back/issues"
+    "url": "https://github.com/SabriBere/expo-notifications-api/issues"
   },
-  "homepage": "https://github.com/SabriBere/socket-back#readme",
+  "homepage": "https://github.com/SabriBere/expo-notifications-api#readme",
   "keywords": [
     "expo",
     "push-notifications",

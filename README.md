@@ -1,4 +1,4 @@
-# Expo notifications api
+# Expo Notifications API
 
 Generic demo backend for the expo-push-notifications mobile application. It exposes
 an HTTP API, stores Expo push tokens, and sends sample push notifications.
@@ -19,7 +19,7 @@ expo-push-notifications (Expo / React Native)
               ↕
              HTTP
               ↕
-socket-back (Node.js / Express / Prisma)
+expo-notifications-api (Node.js / Express / Prisma)
               ↓
        Expo Push Service
 ```
@@ -44,7 +44,12 @@ Create `.env.development`:
 ```env
 PORT=8000
 DATABASE_URL=file:./dev.db
+ENABLE_PUSH_SCHEDULER=false
 ```
+
+Push delivery is disabled by default. Set `ENABLE_PUSH_SCHEDULER=true` to start
+the demo scheduler when the server boots. This opt-in prevents a fresh local
+installation from sending notifications unexpectedly.
 
 ## Installation
 
@@ -126,7 +131,7 @@ Mobile app
   ├─ GET /notifications
   └─ POST /push-tokens/register
 
-Scheduler
+Scheduler (`ENABLE_PUSH_SCHEDULER=true`)
   └─ every 3 minutes
        ├─ load demo notifications
        ├─ load registered tokens

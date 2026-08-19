@@ -10,7 +10,9 @@ server.use(express.json({ limit: "16kb" }));
 server.use(cors());
 server.use("/", routes);
 
-startNotificationScheduler();
+if (process.env.ENABLE_PUSH_SCHEDULER === "true") {
+  startNotificationScheduler();
+}
 
 server.listen(HTTP_PORT, () => {
   console.log(`Escuchando backend HTTP en 0.0.0.0:${HTTP_PORT}`);
