@@ -1,8 +1,7 @@
 # SocketBack
 
 Generic demo backend for the expo-push-notifications mobile application. It exposes
-an HTTP API, stores Expo push tokens, sends sample push notifications, and
-broadcasts demo items over WebSocket.
+an HTTP API, stores Expo push tokens, and sends sample push notifications.
 
 The repository intentionally uses invented data and neutral field names. It is
 designed as a public technical lab rather than an integration with a real
@@ -13,12 +12,12 @@ business domain.
 This backend is designed to work with
 [expo-push-notifications](https://github.com/SabriBere/expo-push-notifications), an Expo /
 React Native mobile client used to test push notifications, deep linking and
-WebSocket communication.
+HTTP communication.
 
 ```text
 expo-push-notifications (Expo / React Native)
               ↕
-      HTTP + WebSocket
+             HTTP
               ↕
 socket-back (Node.js / Express / Prisma)
               ↓
@@ -28,7 +27,6 @@ socket-back (Node.js / Express / Prisma)
 ## Features
 
 - Express HTTP API
-- standalone WebSocket server
 - SQLite persistence through Prisma
 - idempotent Expo push-token registration
 - idempotent scheduled delivery through Expo Push Service
@@ -45,11 +43,8 @@ Create `.env.development`:
 
 ```env
 PORT=8000
-SOCKET_PORT=8001
 DATABASE_URL=file:./dev.db
 ```
-
-The HTTP and WebSocket servers use separate ports.
 
 ## Installation
 
@@ -61,11 +56,10 @@ npm run prisma:seed
 npm run dev
 ```
 
-The service listens on:
+The HTTP service listens on:
 
 ```text
-HTTP:      http://localhost:8000
-WebSocket: ws://localhost:8001
+HTTP: http://localhost:8000
 ```
 
 ## HTTP API
@@ -125,54 +119,12 @@ Remote notifications use a deliberately small, generic payload:
 
 No user identifiers, credentials, or domain-specific metadata are included.
 
-## WebSocket contract
-
-Connecting to `ws://localhost:8001` returns:
-
-```json
-{
-  "type": "connected",
-  "message": "Notification demo socket connected"
-}
-```
-
-Send this JSON message to request a notification broadcast:
-
-```json
-{
-  "type": "requestNotifications"
-}
-```
-
-The server rejects binary messages, invalid JSON and unknown event types. HTTP
-and WebSocket request payloads are limited to 16 KB.
-
-Successful requests receive a broadcast with this shape:
-
-```json
-{
-  "type": "notificationBatch",
-  "data": [
-    {
-      "itemId": 101,
-      "contextId": 1001,
-      "title": "A new demo item is ready to review",
-      "sourceType": "web",
-      "source": "Demo Feed",
-      "category": "Product updates",
-      "link": "https://example.com/demo/101"
-    }
-  ]
-}
-```
-
 ## Delivery flow
 
 ```text
 Mobile app
   ├─ GET /notifications
-  ├─ POST /push-tokens/register
-  └─ ws://localhost:8001
+  └─ POST /push-tokens/register
 
 Scheduler
   └─ every 3 minutes
@@ -200,9 +152,8 @@ api/
 │   └── routes.ts
 ├── services/
 │   ├── notificationServices.ts
+│   ├── notificationScheduler.ts
 │   └── pushTokenServices.ts
-├── sockets/
-│   └── notificationSocket.ts
 └── server.ts
 
 mocks/

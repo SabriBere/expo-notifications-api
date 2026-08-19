@@ -1,35 +1,17 @@
 import express from "express";
-import { WebSocketServer, WebSocket } from "ws";
-import {
-  handleNotificationSocketConnection,
-  startNotificationScheduler,
-} from "./sockets/notificationSocket";
+import { startNotificationScheduler } from "./services/notificationScheduler";
 import cors from "cors";
 import routes from "./routes/routes";
 
 const server = express();
 const HTTP_PORT = Number(process.env.PORT ?? 8000);
-const SOCKET_PORT = Number(process.env.SOCKET_PORT ?? HTTP_PORT + 1);
 
 server.use(express.json({ limit: "16kb" }));
 server.use(cors());
 server.use("/", routes);
 
-const wss = new WebSocketServer({
-  port: SOCKET_PORT,
-  maxPayload: 16 * 1024,
-});
-
-wss.on("connection", (socket: WebSocket) => {
-  handleNotificationSocketConnection(socket, wss);
-});
-
 startNotificationScheduler();
 
 server.listen(HTTP_PORT, () => {
   console.log(`Escuchando backend HTTP en 0.0.0.0:${HTTP_PORT}`);
-});
-
-wss.on("listening", () => {
-  console.log(`Escuchando backend WebSocket en 0.0.0.0:${SOCKET_PORT}`);
 });

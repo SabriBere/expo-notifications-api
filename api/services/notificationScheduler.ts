@@ -1,7 +1,6 @@
-import { WebSocketServer, WebSocket } from "ws";
-import NotificationServices from "../services/notificationServices";
-import PushDeliveryServices from "../services/pushDeliveryServices";
-import PushTokenServices from "../services/pushTokenServices";
+import NotificationServices from "./notificationServices";
+import PushDeliveryServices from "./pushDeliveryServices";
+import PushTokenServices from "./pushTokenServices";
 
 type DemoNotification = {
   id: number;
@@ -34,33 +33,6 @@ type DemoDispatchResult = {
   sentCount: number;
   hasPending: boolean;
 };
-
-type SocketRequest = {
-  type: "requestNotifications";
-};
-
-function sendSocketError(socket: WebSocket, code: string, message: string) {
-  socket.send(JSON.stringify({ type: "error", code, message }));
-}
-
-function parseSocketRequest(rawMessage: string): SocketRequest | null {
-  try {
-    const payload: unknown = JSON.parse(rawMessage);
-
-    if (
-      typeof payload !== "object" ||
-      payload === null ||
-      !("type" in payload) ||
-      payload.type !== "requestNotifications"
-    ) {
-      return null;
-    }
-
-    return { type: payload.type };
-  } catch {
-    return null;
-  }
-}
 
 function getNotificationIcon(sourceType: string) {
   switch (sourceType) {
@@ -267,23 +239,6 @@ export async function dispatchPushNotifications(): Promise<DemoDispatchResult> {
   return sendExpoNotifications(notifications);
 }
 
-export async function broadcastSocketNotifications(wss: WebSocketServer) {
-  const notifications = await getNotificationsForDelivery();
-
-  if (!notifications) return;
-
-  const payload = JSON.stringify({
-    type: "notificationBatch",
-    data: notifications,
-  });
-
-  wss.clients.forEach((client: WebSocket) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(payload);
-    }
-  });
-}
-
 export function startNotificationScheduler(intervalMs = 3 * 60 * 1000) {
   const genericIntervalMs = 10 * 60 * 1000;
   let isDispatchRunning = false;
@@ -327,46 +282,4 @@ export function startNotificationScheduler(intervalMs = 3 * 60 * 1000) {
   schedule(intervalMs, false);
 
   return () => clearTimeout(timer);
-}
-
-export function handleNotificationSocketConnection(
-  socket: WebSocket,
-  wss: WebSocketServer
-) {
-  console.info("Client connected to notification socket");
-
-  socket.send(
-    JSON.stringify({
-      type: "connected",
-      message: "Notification demo socket connected",
-    })
-  );
-
-  socket.on("message", (message, isBinary) => {
-    if (isBinary) {
-      sendSocketError(
-        socket,
-        "unsupported_payload",
-        "Binary messages are not supported"
-      );
-      return;
-    }
-
-    const request = parseSocketRequest(message.toString());
-    if (!request) {
-      sendSocketError(
-        socket,
-        "invalid_message",
-        'Expected {"type":"requestNotifications"}'
-      );
-      return;
-    }
-
-    void broadcastSocketNotifications(wss);
-    console.info("Message received from notification socket client");
-  });
-
-  socket.on("close", () => {
-    console.info("Client disconnected from notification socket");
-  });
 }

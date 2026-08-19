@@ -1,7 +1,7 @@
 {
   "name": "socketback",
   "version": "1.0.0",
-  "description": "Demo backend for Expo push notifications, WebSockets, and deep-link testing",
+  "description": "Demo backend for Expo push notifications and deep-link testing",
   "main": "dist/api/server.js",
   "scripts": {
     "dev": "dotenvx run --env-file=.env.development -- nodemon api/server.ts",
@@ -29,7 +29,6 @@
   "keywords": [
     "expo",
     "push-notifications",
-    "websocket",
     "prisma",
     "typescript"
   ],
@@ -42,7 +41,6 @@
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.14.9",
-    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
     "eslint": "^10.1.0",
@@ -61,8 +59,7 @@
     "cors": "^2.8.5",
     "expo-server-sdk": "^6.1.0",
     "express": "^4.19.2",
-    "morgan": "^1.10.0",
-    "ws": "^8.19.0"
+    "morgan": "^1.10.0"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
