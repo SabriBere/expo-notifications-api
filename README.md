@@ -61,6 +61,9 @@ npm run prisma:seed
 npm run dev
 ```
 
+`npm run prisma:migrate` creates `prisma/dev.db` when it does not exist and
+then applies every committed migration. No manual SQLite setup is required.
+
 The HTTP service listens on:
 
 ```text
